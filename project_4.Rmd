@@ -1,0 +1,583 @@
+Loan Data Exploration by Xue Bai
+========================================================
+The data set contains 113,937 loans with 81 variables on each loan. I 
+choose 10 varibles frome this data set to explore. The variables I choose are: 
+loan original date, term, loan status, borrower rate, listing category, 
+occupation, employment, monthly loan payment, loan original amount and 
+income range. 
+
+# Univariate Analysis
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using
+# in your analysis in this code chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk.
+# This prevents the code from displaying in the knitted HTML output.
+# You should set echo=FALSE for all code chunks in your file.
+
+library(ggplot2)
+library(dplyr)
+library(GGally)
+library(gridExtra)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Load_the_Data}
+# Load the Data
+setwd("~/Downloads/udacity/project_4")
+loan<-read.csv('prosperLoanData.csv',sep=',')
+loan<-loan[,c('EmploymentStatus','Term','ListingCategory..numeric.',
+              'Occupation','MonthlyLoanPayment','LoanOriginalAmount',
+              'IncomeRange','CreditGrade','BorrowerState','LoanStatus',
+              'BorrowerRate','LoanOriginationDate')]
+loan$year<-as.numeric(substr(loan$LoanOriginationDate,1,4))
+loan$year<-as.factor(loan$year)
+loan$ListingCategory..numeric.<-as.factor(loan$ListingCategory..numeric.)
+loan$Term<-as.factor(loan$Term)
+head(loan)
+```
+
+# Univariate Plots Section
+ 
+#### Number of loans in 2005-2014
+ 
+```{r echo=FALSE,  message=FALSE, warning=FALSE, Univariate_Plots}
+qplot(x=year,data=loan)
+```
+
+From this plot we can see that from 2005 to 2008, the number of loans increase. 
+but at 2009, the number of loans suddenly decrease a lot. Then from 2009, the 
+number of loans increase quiet fast and reach the highest at 2013. The dataset 
+only contains data before 3/11/2014, so it is not surprise that the 
+number of loans in 2014 is quiet small.
+ 
+ 
+ 
+#### Term
+ 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x=Term),data=loan)+geom_bar()
+```
+
+From this plot we can see that the most people choose to loan for 36 months.
+
+
+
+The reason why people loan.
+
+#### Listing Category
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+ggplot(aes(x=ListingCategory..numeric.),data=loan)+geom_bar()+ 
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=.5))+scale_x_discrete(limits=seq(0,22,1),breaks=1:21,labels=c(
+    'Not Available','Debt Consolidation','Home Improvement',
+    'Business', 'Personal Loan','Student Use','Auto','Other',
+    'Baby&Adoption', 'Boat','Cosmetic Procedure', 'Engagement Ring',
+    'Green Loans','Household Expenses', 'Large Purchases', 
+    'Medical/Dental', 'Motorcycle','RV', 'Taxes', 'Vacation', 'Wedding Loans'))+labs(x='Listing Category',y='count')+
+  scale_y_continuous(trans='log10') +coord_flip()
+```
+
+From this plot we can see that most people loan because of debt consolidation.
+
+
+
+#### Loan Status
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+ggplot(aes(x=LoanStatus),data=loan)+geom_bar() + 
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=.5))
+summary(loan$LoanStatus)
+```
+
+Most of the loans are completed or in current. Few of loans past due.
+
+
+#### BorrowerState
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+ggplot(aes(x=BorrowerState),data=loan)+geom_bar()+
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=.5))
+```
+
+Form this plot we can find that the number of loans in CA is significantly 
+large.
+The number of loans in FL,IL,NY,TX is also very large.
+ 
+ 
+ 
+#### Occupation
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+ggplot(aes(x=Occupation),data=loan)+geom_bar()+
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=.5))
+```
+ 
+
+#### Employment
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+# remove the blank for empolyment Status
+ggplot(aes(x=EmploymentStatus),data=subset(loan,EmploymentStatus!=''))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=.5))
+```
+
+
+#### Incomerange
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+loan$IncomeRange=factor(loan$IncomeRange,levels=c('Not employed',
+'Not displayed','$0','$1-24,999','$25,000-49,999','$50,000-74,999',
+                                '$75,000-99,999','$100,000+'))
+ggplot(aes(x=IncomeRange),data=loan)+geom_bar()+
+  theme(axis.text.x = element_text(angle=90, hjust=0, vjust=.5))
+```
+
+From this plot we can find that most people loan has income range between 
+25,000 to 74,999.
+
+
+
+#### Loan Amount
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+ggplot(aes(x=LoanOriginalAmount),data=loan)+geom_histogram()+
+  scale_x_log10(breaks=c(1000,2500,5000,10000,20000,27000,40000))
+```
+
+Most people's loan original amount is below 27,000.
+
+
+
+#### Credit Grade
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+p1=ggplot(aes(x=CreditGrade),data=loan)+geom_bar()
+# exclude blank one
+p2=ggplot(aes(x=CreditGrade),data=subset(loan,CreditGrade!=""))+
+  geom_bar()
+grid.arrange(p1,p2)
+```
+
+Most of the credit grades are leave blank, we need to ignore the blank credit 
+grades when making the Bivariate and mulivariate plot. 
+
+
+#### Borrower Rate
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+
+ggplot(aes(x=BorrowerRate),data=loan)+geom_histogram()+
+  xlim(0,0.4)
+
+```
+
+Most of the borrower rate is between 0.05-0.35 which is a really large rate. 
+The distribution of the rate is like normal distribution.
+
+
+
+
+
+
+### What is the structure of your dataset?
+
+The data set contains 113,937 loans with 81 variables on each loan. I choose 12 varibles frome this data set to explore. The variables I choose are: 
+loan original date, term, loan status, borrower rate, listing category, 
+occupation, employment, monthly loan payment, loan original amount,income range, credit grade and borrower state.
+
+term:The length of the loan expressed in months.(12,36,60)
+loan status:Cancelled, Chargedoff, Completed, Current, Defaulted, FinalPaymentInProgress, PastDue
+listing category:The category of the listing that the borrower selected when 
+posting their listing(including: Not Available, Debt Consolidation, Home 
+Improvement,  Business, Personal Loan, Student Use, Auto, Other, Baby&Adoption, 
+Boat, Cosmetic Procedure, Engagement Ring, Green Loans,  Household Expenses, 
+Large Purchases, Medical/Dental, Motorcycle, RV, Taxes, Vacation, Wedding Loans
+
+### What is/are the main feature(s) of interest in your dataset?
+
+I am interest in what factor influence the rant of loans? And what factor is 
+the most important? The factors I'm interested include: 1. when 2. where 
+3.term of loan 4.occupation/employment status of borrower 5. loan amount 6. Incomerange of borrower7. credit grade of borrower
+
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+
+I also explore the reason why people loan. 
+
+### Did you create any new variables from existing variables in the dataset?
+
+I create year to indicate the year when te loan start.
+
+### Of the features you investigated, were there any unusual distributions?
+###Did you perform any operations on the data to tidy, adjust, or change the 
+###form of the data? If so, why did you do this?
+
+I change the Listing Category of loan to words instead of the number to make 
+it easier for people to know what is going.
+
+# Bivariate Plots Section
+
+```{r fig.width=8, fig.height=6,echo=FALSE, message=FALSE, warning=FALSE,Bivariate_Plots}
+
+set.seed(1234)
+ggpairs(loan[sample.int(nrow(loan),1000),c('EmploymentStatus',
+'Term','ListingCategory..numeric.','MonthlyLoanPayment',
+'LoanOriginalAmount','IncomeRange','CreditGrade','BorrowerState',
+'BorrowerRate','year')],
+ axisLabels = "none",showStrips = FALSE,columnLabels=c('ES','Term',
+'LC','MP','LOA','IR','CG','BS','BR','year'))+
+  theme(axis.text=element_blank(),axis.line=element_blank(), 
+axis.ticks=element_blank(),
+axis.title.x=element_blank(),panel.grid.major= element_blank())
+
+```
+
+From the plot below we can see that the average borrower rate is different year 
+to year. And there are only few outliers. The average borrower rate is quite 
+small at 2015. From 2006 to 2008, the average borrower rate decrease a little 
+bit. From 2008-2011, the borrower rate increase. And from 2011 to 2014, the 
+average borrower rate decrease.
+
+#### year-rate
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+loan$year_num<-as.numeric(substr(loan$LoanOriginationDate,1,4))
+loan$month_year<-
+  as.numeric(substr(loan$LoanOriginationDate,1,4))+
+  as.numeric(substr(loan$LoanOriginationDate,6,7))/12
+ggplot(data=loan, aes(x=month_year, y=BorrowerRate))+
+  geom_point(alpha=1/100)+
+  stat_summary(aes(x=month_year),fun.y = 'mean',colour = 'red',geom='line')+scale_x_continuous(breaks=seq(2005,2014,1))
+
+
+```
+
+
+
+
+
+From this plot, we can find that the longer the term is, higher rate is likely.
+
+#### Term-rate
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+ggplot(loan,aes(x=Term,y=BorrowerRate))+geom_boxplot()
+
+```
+
+
+
+
+
+
+The difference of loan rate to different employment status is not much. However,
+the rate for borrower that is not employed is higher than other status.
+
+#### Employment-rate
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+term_rate<-loan %>%
+  group_by(EmploymentStatus) %>%
+  summarise(mean=mean(BorrowerRate),se=sd(BorrowerRate)/sqrt(n()))
+
+ggplot(data=loan, aes(x=EmploymentStatus, y=BorrowerRate))+
+  geom_boxplot()+
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=.5))
+
+```
+
+
+
+
+
+From the scatter plot I find the rate variance decrease as the loan original 
+amount increase.But before 25,000 the loan original amount seems has litter 
+relation to the loan original amount. For the loan over 25,000 dollars, the 
+loan rate variance is apparently smaller. 
+
+The blue line is the correlation line of borrower rate to loan original amount.
+From this line, we can find that the larger the loan original amount is, the 
+lower borrowerrate might be.
+#### LoanAmount-rate
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+ggplot(data=loan, aes(x=LoanOriginalAmount, y=BorrowerRate))+
+  geom_point()
+ggplot(data=loan, aes(x=LoanOriginalAmount, y=BorrowerRate))+
+  geom_point(alpha=1/50)+stat_smooth(method='lm')
+```
+
+
+
+
+
+
+The borrower rate has little relation to the borrower state.
+
+#### borrowerstate-rate
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+ggplot(data=loan, aes(x=BorrowerState, y=BorrowerRate))+
+  geom_boxplot()+
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=.5))
+```
+
+
+
+
+
+
+For borrower rate is lower when the income range of the borrower is increase. 
+But surprisely, the income range of 0 is lowest. There maybe some special loan 
+project for these people.
+
+#### IncomeRange-rate
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+
+ggplot(data=loan, aes(x=IncomeRange, y=BorrowerRate))+
+  geom_boxplot()+
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=.5))
+```
+
+
+
+
+
+
+
+Apparently, the higher the credit grade, the lower rate is.
+
+#### Credit Grade
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+# ignore blank credit grade
+ggplot(data=subset(loan,CreditGrade!=''), aes(x=CreditGrade, y=BorrowerRate))+geom_boxplot()+
+  scale_x_discrete(limits=c('AA','A','B','C','D','E','HR','NC'))
+```
+
+
+
+
+#### The relation between category of loan to loan original amount
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+ggplot(data=loan, aes(x=ListingCategory..numeric., y=LoanOriginalAmount))+geom_boxplot()+coord_flip()
+```
+
+
+
+
+
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in 
+###the dataset?
+
+Some factors I think may have impact on the loan rate actually has little 
+impact on that. The factors I find that have relatively strong impact on loan 
+rate are year of loan, term, income range and credit grade. 
+
+### Did you observe any interesting relationships between the other features 
+###(not the main feature(s) of interest)?
+
+The loan original amount, the borrower state and the employment status has 
+little relation to the loan rate.
+
+### What was the strongest relationship you found?
+
+The time of loan is the most important factor of borrower rate.
+
+
+# Multivariate Plots Section
+
+```{r echo=FALSE, Multivariate_Plots}
+# get the loan original date, change the date only include year to include 
+#year and month. The month is expressed in decimal part.
+```
+
+
+
+From the plot below we can see that before 2009, the term of loan is always 36 
+months. After 2009, there are loans for 12, 26 and 60 months. When 12 and 36 
+months' loan first appear(at 2010), the average rate is quiet low accordint to 
+the rate for 36 months' loan. But it increase quiet fast. 
+
+#### time-rate-term
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+ggplot(data=loan, aes(x=year, y=BorrowerRate))+
+  geom_boxplot(aes(color=Term))
+
+```
+
+
+
+
+
+
+After 2009, no credit grade is available. But we can tell from 2005-2009, 
+in general, the higher the credit grade is, the lower the average borrower rate.
+
+#### time-rate-credit
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+average_rate_year_credit<-  subset(loan,CreditGrade!='') %>%
+group_by(CreditGrade,year) %>%
+  summarise(average=mean(BorrowerRate))%>%
+  arrange(year)%>%
+  ungroup()
+
+average_rate_year_credit$year<-
+  as.numeric(average_rate_year_credit$year)+2004
+ggplot(data=average_rate_year_credit,aes(x=year,y=average))+
+  geom_line(aes(color=CreditGrade))+
+  scale_color_brewer(limits=c('AA','A','B','C','D','E','HR','NC'))
+```
+
+
+
+
+
+
+The plot below descibe the relation of the average borrower rate in 2005-2014 
+for people have different income range. I omit the 'Not displayed' category of 
+the income range. From the below plot we can see that in genaral the higher the 
+income range, thelower the average borrower rate is. And the basic shape of the average borrower rate to the year is the same. 
+
+#### time-rate-Incomerange
+ 
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+average_rate_year_Incomerange<-  loan %>%
+group_by(IncomeRange,year) %>%
+  summarise(average=mean(BorrowerRate))%>%
+  arrange(year) %>%
+ungroup()
+average_rate_year_Incomerange$year<-
+  as.numeric(average_rate_year_Incomerange$year)+2004
+
+average_rate_year_Incomerange_sub<-subset(
+  average_rate_year_Incomerange,IncomeRange!='Not displayed')
+ggplot(average_rate_year_Incomerange_sub,aes(x=year,y=average))+
+  geom_line(aes(color=IncomeRange))+
+  scale_x_continuous(breaks=seq(2005,2014,1))+
+  geom_point(aes(color=IncomeRange))+scale_color_brewer(
+      limits=c('Not employed','$0','$1-24,999','$25,000-49,999',
+               '$50,000-74,999','$75,000-99,999', '$100,000+'))
+
+```
+
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of 
+###looking at your feature(s) of interest?
+
+The tendency of average loan rate is nearly the same for different terms, 
+different Incomerange and credit grade. 
+
+### Were there any interesting or surprising interactions between features?
+
+At 2012-2014, the average loan rate decrease, but the average rate for 
+unemployed people increase a lot.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+
+```{r echo=FALSE, Plot_One}
+ggplot(aes(x=ListingCategory..numeric.),data=loan)+
+  geom_bar()+ 
+  theme(axis.text.x = element_text(angle=90,hjust=1,vjust=.5))+
+  scale_x_discrete(limits=seq(0,21,1),breaks=1:21,
+labels=c('Not Available','Debt Consolidation','Home Improvement',
+'Business', 'Personal Loan','Student Use','Auto','Other',
+'Baby&Adoption', 'Boat',  'Cosmetic Procedure', 'Engagement Ring',
+'Green Loans','Household Expenses', 'Large Purchases', 'Medical/Dental', 'Motorcycle','RV', 'Taxes', 'Vacation', 'Wedding Loans'))+
+  labs(x='Listing Category',y='count')+
+  scale_y_continuous(trans='sqrt')+
+  ggtitle('Loan Category')+
+  labs(x='Loan Catagory',y='Number of loans')+coord_flip()
+summary(loan$ListingCategory..numeric.)
+```
+### Description One
+
+This plot describes number of loans for different categories. From this plot we 
+can see that the most people loan for Debt Consolidation.
+
+### Plot Two
+
+```{r echo=FALSE, Plot_Two}
+ggplot(data=loan, aes(x=month_year, y=BorrowerRate))+
+  geom_point(alpha=1/100)+
+  stat_summary(aes(x=month_year),fun.y ='mean',colour='red',geom='line')+
+  scale_x_continuous(limits=
+c(2005,2014.5),breaks=seq(2005,2014,1))+labs(x='Loan original year',
+y='Loan Rate')+ggtitle('The loan rate in 2005-2014')
+```
+
+
+### Description Two
+
+This plot shows the loan rate changes in 2005-2014. The red line is the average 
+loan rate for that time. We can see from the plot that the loan rate increase in
+2005-2011, and decrease from 2011 to 2014.
+
+### Plot Three
+
+```{r echo=FALSE, Plot_Three}
+ggplot(average_rate_year_Incomerange_sub,aes(x=year,y=average))+
+  geom_line(aes(color=IncomeRange))+
+  scale_x_continuous(breaks=seq(2005,2014,1))+
+  geom_point(aes(color=IncomeRange))+
+  scale_color_brewer(limits=c('Not employed','$0','$1-24,999',
+'$25,000-49,999','$50,000-74,999','$75,000-99,999', '$100,000+'))+
+  ggtitle('Average borrower rate in 2005-2014 
+          for different income range')+
+  labs(x='Loan original year',y='Average Loan Rate')+
+  ggtitle('The loan rate in 2005-2014 for different income range')
+```
+
+
+### Description Three
+
+This plot descibe the relation of the average borrower rate in 2005-2014 
+for people have different income range. I remove the 'Not displayed' category of 
+the income range because it doesn't contain useful information. From the below 
+plot we can see that in genaral the higher the income range, thelower the 
+average borrower rate is. And the basic shape of the average borrower rate to
+the year is the same.
+
+------
+
+# Reflection
+
+The data set contains 113,937 loans with 81 variables on each loan. I choose 13 varibles frome this data set to explore its relation to the loan rate. The 
+variables I choose are: loan original date, term, loan status, borrower rate,
+listing category, occupation, employment, monthly loan payment, loan original 
+amount, income range and borrower state. 
+
+I started by understanding the individual variables in the data set, and then I explored the relation of each factor to the loan rate. Then I found the factors
+which have may relate relatively strong to the loan rate and did some further explorement in these factors.
+
+From the explorement, I find that the relatively strong factors of loan rate 
+are date of loan, credit grade, income range of borrower and term. What 
+surprise me is that the loan amount has little relation to the loan rate.
+
+When doing this project, I find it is hard because many data is blank. 
+For example, the credit grade is only available in 2005-2009 and the many 
+employment status is not displayed. So I have to omit the this data when analyze
+the data.
+
+I also find that the loan rate is affected by too many features that I can't 
+describe them all in one plot. So I need to split the features and find out the 
+most important features or the features I am interested in and then display them
+in different plots.
+
+In this project, we know that the time, credit grade, income range and term has 
+relatively strong relationships with the loan rate. In the further work, maybe
+I can give each feature a coefficient which can makes us to predict the loan 
+rate.
